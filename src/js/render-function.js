@@ -2,8 +2,8 @@ import SimpleLightbox from "simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
 
 export const gallery = document.querySelector('ul.gallery');
-export function imageCard (images) {
-      const card = images
+export function imageCard(images) {
+    const card = images
     .map(
         image => `
     <li class="gallery-item">

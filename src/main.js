@@ -11,18 +11,29 @@ import "simplelightbox/dist/simple-lightbox.min.css";
 const form = document.querySelector(".form");
 const input = document.querySelector("input");
 const loader = document.querySelector(".loader");
+const loadMore = document.querySelector(".load-more-button");
 
-    const modal = new SimpleLightbox(".gallery-link", {
+const modal = new SimpleLightbox(".gallery-link", {
     captionsData: "alt",
     captionDelay: 250,
-    });
+});
 
-form.addEventListener("submit", event => {
+let inputTrimmed;
+let page = 1;
+let maxPage = 0;
+const pageVolume = 15;
+let imageData;
+
+form.addEventListener('submit', submit);
+loadMore.addEventListener('click', load);
+
+async function submit(event) {
   event.preventDefault();
   loader.classList.add("is-open");
   gallery.innerHTML = "";
   modal.refresh();
-  const inputTrimmed = input.value.trim();
+
+  inputTrimmed = input.value.trim();
   if (inputTrimmed === "") {
     loader.classList.remove("is-open");
     return iziToast.show({
@@ -33,23 +44,68 @@ form.addEventListener("submit", event => {
         position: 'topRight',
     });
     }
+  page = 1;
+
+  try {
+    imageData = await http(inputTrimmed, page);
+    maxPage = Math.ceil(imageData.totalHits / pageVolume);
+
+    if (imageData.hits.length === 0) {
+      loader.classList.remove("is-open");
+      loadMore.classList.remove("is-open");
+        return iziToast.info({
+            color: '#EF4040',
+            progressBarColor: 'rgb(181, 27, 27)',
+            messageColor: '#FFFFFF',
+            message:'Image limit reached',
+            position: 'topRight',
+      });
+    }
+
+    imageCard(imageData.hits);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    loader.classList.remove("is-open");
+  }
+  loader.classList.remove("is-open");
+  input.value = '';
+}
+
+async function load(event) {
+  loader.classList.add("is-open");
+  page += 1;
+
+  try {
+    imageData = await http(inputTrimmed, page);
+    imageCard(imageData.hits);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    loader.classList.remove("is-open");
+    hideButton();
     
-  http(inputTrimmed)
-    .then(response => {
-      if (response.hits.length === 0) {
-        return iziToast.show({
-          color: '#EF4040',
-          progressBarColor: 'rgb(181, 27, 27)',
-          messageColor: '#FFFFFF',
-          message: "Sorry! There are no images matching your search query. Please try again!",
-          position: "topRight",
-        });
-      }
-      imageCard(response.hits);
-    })
-    .catch(error => {
-      console.error(error);
-    })
-    .finally(() => loader.classList.remove("is-open"));
-    input.value = "";
-});
+    //   Smooth scrolling
+  const countCards = 2;
+  const height = gallery.firstElementChild.getBoundingClientRect().height * countCards;
+  scrollBy({
+    top: height,
+    behavior: 'smooth',
+  });
+  }
+}
+
+function hideButton() {
+  if (page >= maxPage) {
+    loadMore.classList.remove("is-open");
+      return iziToast.show({
+      color: '#EF4040',
+      progressBarColor: 'rgb(181, 27, 27)',
+      messageColor: '#FFFFFF',
+      message: "We're sorry, but you've reached the end of search results.",
+      position: 'topRight',
+    });
+  } else {
+    loadMore.classList.add("is-open");
+  }
+}
