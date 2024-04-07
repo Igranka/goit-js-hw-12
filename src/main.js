@@ -68,7 +68,7 @@ async function submit(event) {
   } finally {
     loader.classList.remove("is-open");
   }
-  loader.classList.remove("is-open");
+  buttonStatus();
   input.value = '';
 }
 
@@ -83,7 +83,7 @@ async function load(event) {
     console.error(error);
   } finally {
     loader.classList.remove("is-open");
-    hideButton();
+    buttonStatus();
     
     //   Smooth scrolling
   const countCards = 2;
@@ -95,7 +95,7 @@ async function load(event) {
   }
 }
 
-function hideButton() {
+function buttonStatus() {
   if (page >= maxPage) {
     loadMore.classList.remove("is-open");
       return iziToast.show({
